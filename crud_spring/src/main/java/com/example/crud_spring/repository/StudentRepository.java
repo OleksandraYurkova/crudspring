@@ -20,7 +20,9 @@ public class StudentRepository {  private final List<Student> students = new Arr
     }
 
     public void add(Student student) {
-        student.setId(nextId++);
+        if (student.getId() == null) {
+            student.setId(nextId++);  // Призначення id при додаванні студента
+        }
         students.add(student);
     }
 

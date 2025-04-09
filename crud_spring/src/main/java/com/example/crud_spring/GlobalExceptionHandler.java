@@ -1,44 +1,40 @@
 package com.example.crud_spring;
 
-import jakarta.validation.ConstraintViolationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
-    
-    @ExceptionHandler(StudentNotFoundException.class)
-    public ResponseEntity<String> handleStudentNotFound(StudentNotFoundException ex) {
-        logger.warn("Student not found: {}", ex.getMessage());
+    // Обробка помилки: студент не знайдений
+    @ExceptionHandler(StudentNotFound.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<String> handleStudentNotFoundException(StudentNotFound ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
-    
+    // Обробка помилки валідації (400 BAD REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException ex) {
-        logger.warn("Validation error: {}", ex.getMessage());
-        String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
-        return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage()));
+
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<String> handleConstraintViolation(ConstraintViolationException ex) {
-        logger.warn("Constraint violation: {}", ex.getMessage());
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    
+    // Загальна обробка помилок (500 INTERNAL SERVER ERROR)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception ex) {
-        logger.error("Unexpected error: {}", ex.getMessage(), ex);
-        return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<String> handleGlobalException(Exception ex) {
+        return new ResponseEntity<>("Внутрішня помилка сервера: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

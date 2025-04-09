@@ -113,7 +113,7 @@
     </div>
 
     <!-- Форма для редагування студента -->
-    <form th:action="@{/students/edit/{id}(id=${student.id})}" th:object="${student}" method="post">
+    <form th:action="@{/home/edit/{id}(id=${student.id})}" th:object="${student}" method="post">
         <div class="form-group">
             <label for="name">Ім'я:</label>
             <input type="text" id="name" th:field="*{name}" required />
